@@ -4,7 +4,7 @@ package Bio::Graphics::JBrowser::Gbrowse_ConvertConfig;
 use strict;
 use warnings;
 
-use JSON 2 -support_by_pp; 
+use JSON 2 -support_by_pp;
 use Bio::Graphics::FeatureFile;
 
 my $default_feature = 'feature2';
@@ -12,13 +12,13 @@ my $default_feature = 'feature2';
 sub new {
 	my $configFile = Bio::Graphics::FeatureFile->new(-file => $_[1]);
 	my @Jbrowse_track_options = (
-				     "track", 
+				     "track",
 				     "key",
 				     "autocomplete",
 				     "category",
 				     "description",
-				     "phase", 
-				     "subfeatures", 
+				     "phase",
+				     "subfeatures",
 				     "subfeatureClasses",
 				     "arrowheadClass",
 				     "feature",
@@ -40,8 +40,8 @@ sub new {
 				}
 				else {
 					$config{$stanza}{class} = $configFile->setting($stanza => $opt);
-				}	
-			} 
+				}
+			}
 			elsif( ( grep { $_ eq $opt } @Jbrowse_track_options)||($opt eq 'database') ) {
 				$config{$stanza}{$opt} = $configFile->setting($stanza => $opt);
 			}
@@ -54,15 +54,15 @@ sub new {
 	elsif(exists $config{general}{metadata}) {
 		$description = $config{general}{metadata};
 	}
-	
+
 	my $general_db = 0;
 	my $general_adaptor = 0;
 	my $db_count = 0;
 	my (@db_name, @db_adaptor, @db_args, $default_db, %db_args, $conf_args, @args, @arg);
 	if(exists $config{general}{database}) {
-		$default_db = $config{general}{database}; 
+		$default_db = $config{general}{database};
 	}
-	elsif((exists $config{general}{db_adaptor})&&(exists $config{general}{db_args})) { 
+	elsif((exists $config{general}{db_adaptor})&&(exists $config{general}{db_args})) {
 		$general_db = substr($_[1], 0, rindex($_[1],'.'));
 		push( @db_name, $general_db);
 		push( @db_adaptor, $config{general}{db_adaptor});
@@ -75,7 +75,7 @@ sub new {
 			$db_args[0]{$arg[0]} = $arg[1];
 		}
 		$db_count = 1;
-	}	
+	}
 
 	my $tracks_count = 0;
 	my (@tracks, $conf_arg);
@@ -109,10 +109,11 @@ sub new {
 			$tracks_count++;
 		}
 	}
+
 	my ($json, %file_info, %json_config_files, $i, @file_tracks, $count);
 	my $json_text = JSON->new->allow_nonref->pretty->canonical;
-	# The sort_by function needs be be figured out in order to have the sections 
-	# in the proper order 
+	# The sort_by function needs be be figured out in order to have the sections
+	# in the proper order
 	#$json_text = JSON->new->allow_nonref->pretty->sort_by(\&custom_sort);
 	for ($count = 0; $count < $db_count; $count++){
 		$file_info{description} = $description;
@@ -121,7 +122,7 @@ sub new {
 		$file_info{'TRACK DEFAULTS'} = \%{ $config{'TRACK DEFAULTS'} };
 		@file_tracks = ();
 		foreach $i ( 0 .. $#tracks){
-			if(($tracks[$i]{database})&&(($tracks[$i]{database}) eq ($db_name[$count]))) { 
+			if(($tracks[$i]{database})&&(($tracks[$i]{database}) eq ($db_name[$count]))) {
 				delete $tracks[$i]{database};
 				push(@file_tracks, \%{ $tracks[$i] });
 			}
@@ -143,7 +144,7 @@ sub custom_sort {
 		    };
 	return $order->{$a} <=> $order->{$b};
 }
-	
+
 =head1 AUTHOR
 
 Adam Wright E<lt>Adam.Wright@oicr.on.ca<gt>
