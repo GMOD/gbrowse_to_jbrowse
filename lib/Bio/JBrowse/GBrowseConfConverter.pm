@@ -50,9 +50,7 @@ sub jbrowse_conf_data {
     my %jb;
     for my $stanza ( keys %{ $self->{gbconf} } ) {
         if( ref $self->{gbconf}{$stanza} eq 'HASH' ) {
-            for my $key ( keys %{ $self->{gbconf}{$stanza} } ) {
-                $self->convert( \%jb, $stanza, $key, $self->{gbconf}{$stanza}{$key} );
-            }
+            $self->convert_stanza( \%jb, $stanza );
         }
     }
 
@@ -65,36 +63,47 @@ sub jbrowse_conf_data {
     return \%jb;
 }
 
-sub convert {
+sub convert_stanza {
     my ( $self, $conf, $stanza, $key, $value ) = @_;
     ( my $mstanza = $stanza ) =~ s/\W/_/g;
-    ( my $mkey = $key ) =~ s/\W/_/g;
-    if ( $self->can( "convert_${mstanza}_${mkey}" ) ) {
-        $self->${\"convert_${mstanza}_${mkey}"}( $conf, $value );
-    } elsif( $self->can( "convert_$mstanza" ) ) {
+
+    if( $self->can( "convert_$mstanza" ) ) {
         $self->${\"convert_$mstanza"}( $conf, $key, $value );
-    } else {
-        $self->convert_default( $conf, $stanza, $key, $value );
+    }
+    else {
+        $self->convert_default( $conf, $stanza );
     }
 }
 
 sub convert_default {
-    my ( $self, $conf, $stanza, $key, $value ) = @_;
-    (my $mkey = $key) =~ s/\W/_/g;
-    if( $self->can( "convert_track_$mkey" ) ) {
-        $self->${\"convert_track_$mkey"}( $conf, $stanza, $value );
+    my ( $self, $conf, $stanza ) = @_;
+    ( my $mstanza = $stanza ) =~ s/\W/_/g;
+
+    for my $key ( keys %{ $self->{gbconf}{$stanza} } ) {
+        ( my $mkey = $key ) =~ s/\W/_/g;
+        my $value = $self->{gbconf}{$stanza}{$key};
+
+        if ( $self->can( "convert_${mstanza}_${mkey}" ) ) {
+            $self->${\"convert_${mstanza}_${mkey}"}( $conf, $value );
+        }
+        elsif( $self->can( "convert_default_$mkey" ) ) {
+            $self->${\"convert_default_$mkey"}( $conf, $stanza, $value );
+        }
     }
 }
+
+############  converting track configurations ##############
+
 
 sub convert_track_default {
     my ( $self, $conf, $track_label, $value, $key ) = @_;
     $conf->{tracks}{$track_label}{$key} = $value;
 }
 
-sub convert_track_key {
-    my $self = shift;
-    $self->convert_track_default( @_, 'key' );
+sub convert_default_key {
+    shift->convert_track_default( @_, 'key' );
 }
+
 
 
 1;
