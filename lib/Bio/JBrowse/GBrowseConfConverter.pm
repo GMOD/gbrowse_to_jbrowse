@@ -50,7 +50,8 @@ sub jbrowse_conf_data {
     my %jb;
     for my $stanza ( keys %{ $self->{gbconf} } ) {
         if( ref $self->{gbconf}{$stanza} eq 'HASH' ) {
-            $self->convert_stanza( \%jb, $stanza );
+            $self->stanza_handler( $stanza )
+                ->convert_stanza( \%jb, $stanza, $self->{gbconf}{$stanza} );
         }
     }
 
@@ -63,25 +64,42 @@ sub jbrowse_conf_data {
     return \%jb;
 }
 
-sub convert_stanza {
-    my ( $self, $conf, $stanza, $key, $value ) = @_;
-    ( my $mstanza = $stanza ) =~ s/\W/_/g;
+########## conversion method dispatch #################
 
-    if( $self->can( "convert_$mstanza" ) ) {
-        $self->${\"convert_$mstanza"}( $conf, $key, $value );
-    }
-    else {
-        $self->convert_default( $conf, $stanza );
-    }
+sub stanza_handler {
+    my ( $self, $stanza ) = @_;
+
+    my $handler = $self->first_available_class( $self->stanza_handler_choices( $stanza ) );
+
+    return $handler ? $handler->new( parent => $self ) : $self;
 }
 
-sub convert_default {
-    my ( $self, $conf, $stanza ) = @_;
+sub first_available_class {
+    my ( $self, @choices ) = @_;
+    for my $class ( @choices ) {
+        eval "require $class";
+        if( $@ ) {
+            warn $@ unless $@ =~ /^Can't locate/;
+        } else {
+            return $class;
+        }
+    }
+    return;
+}
+
+sub stanza_handler_choices {
+    my ( $self, $stanza ) = @_;
+    ( my $mstanza = $stanza ) =~ s/\W/_/g;
+    return ( (ref $self)."::${mstanza}", (ref $self)."::Track" );
+}
+
+sub convert_stanza {
+    my ( $self, $confTarget, $stanza, $conf ) = @_;
     ( my $mstanza = $stanza ) =~ s/\W/_/g;
 
-    for my $key ( keys %{ $self->{gbconf}{$stanza} } ) {
+    for my $key ( keys %$conf ) {
         ( my $mkey = $key ) =~ s/\W/_/g;
-        my $value = $self->{gbconf}{$stanza}{$key};
+        my $value = $conf->{$key};
 
         if ( $self->can( "convert_${mstanza}_${mkey}" ) ) {
             $self->${\"convert_${mstanza}_${mkey}"}( $conf, $value );
@@ -91,19 +109,5 @@ sub convert_default {
         }
     }
 }
-
-############  converting track configurations ##############
-
-
-sub convert_track_default {
-    my ( $self, $conf, $track_label, $value, $key ) = @_;
-    $conf->{tracks}{$track_label}{$key} = $value;
-}
-
-sub convert_default_key {
-    shift->convert_track_default( @_, 'key' );
-}
-
-
 
 1;
