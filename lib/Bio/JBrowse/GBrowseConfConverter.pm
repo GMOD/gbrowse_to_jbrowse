@@ -101,8 +101,6 @@ sub stanza_handler {
 sub first_available_class {
     my ( $self, @choices ) = @_;
 
-    #warn "looking for @choices\n";
-
     for my $class ( @choices ) {
         eval "require $class";
         if( $@ ) {
@@ -114,10 +112,14 @@ sub first_available_class {
     return;
 }
 
+sub default_namespace {
+    'track'
+}
+
 sub stanza_handler_choices {
     my ( $self, $stanza ) = @_;
 
-    my $namespace = 'track';
+    my $namespace = $self->default_namespace;
     if( $stanza =~ s/:(\w+)$// ) {
         $namespace = $1;
     }
@@ -126,7 +128,10 @@ sub stanza_handler_choices {
         $namespace = 'Semantic_zoom';
     }
 
-    return if $namespace eq 'Details' || $namespace eq 'Semantic_zoom' || $namespace eq 'Region' || $namespace eq 'Overview';
+    return if $namespace eq 'Details'
+           || $namespace eq 'Semantic_zoom'
+           || $namespace eq 'Region'
+           || $namespace eq 'Overview';
 
     my $class = ref $self;
     ( my $mstanza = $stanza ) =~ s/\W/_/g;
