@@ -1,24 +1,30 @@
 #!/usr/bin/env perl
 use lib 'lib';
-use Bio::JBrowse::Cmd::ConvertGBrowseConf;
-Bio::JBrowse::Cmd::ConvertGBrowseConf->new( @ARGV )->run;
+use Bio::JBrowse::GBrowseMigration;
+Bio::JBrowse::GBrowseMigration->run;
 
 __END__
 
 =head1 NAME
 
-gbrowse_to_jbrowse.pl - convert GBrowse configurations to JBrowse configurations
+gbrowse_to_jbrowse - convert GBrowse configurations to JBrowse configurations
 
 =head1 USAGE
 
-  gbrowse_to_jbrowse.pl --main GBrowse.conf  --out converted/
-  gbrowse_to_jbrowse.pl ITAG2.3_genomic.conf --out converted/
+  gbrowse_to_jbrowse conf --main GBrowse.conf
+  gbrowse_to_jbrowse conf ITAG2.3_genomic.conf
+
+  gbrowse_to_jbrowse data --main GBrowse.conf.json
 
 =head1 ARGUMENTS
 
 =over 4
 
-=item --gbrowse <main GBrowse conf file>
+=item --main <main GBrowse conf file>
+
+=item --out <output dir>
+
+Defaults to current directory.
 
 =back
 
